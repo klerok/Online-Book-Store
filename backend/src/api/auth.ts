@@ -48,7 +48,21 @@ router.post(
     }
   }
 );
-router.post("/logout", async function (params) {});
+router.post("/logout", async function (req: Request, res: Response) {
+  try {
+    const { token } = req.body;
+    if (!token) {
+      throw new Error("Token is required");
+    }
+    const decoded = jwt.verify(token, process.env.SECRET_KEY || "secret");
+    if (!decoded) {
+      throw new Error("Invalid or expired token");
+    }
+    return res.status(200).json({ message: "Logged out successfully" });
+  } catch (e) {
+    return res.status(400).json({ error: e });
+  }
+});
 
 router.post(
   "/register",
@@ -67,7 +81,7 @@ router.post(
         }
       } // есть ли такой пользователь в бд
       const hashedPass = await hashPass(password);
-      const newUser = prisma.user.create({
+      const newUser = await prisma.user.create({
         data: { username, email, password: hashedPass },
       });
       return res.status(200).json({ text: newUser });
