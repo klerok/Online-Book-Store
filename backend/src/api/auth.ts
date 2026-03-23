@@ -3,6 +3,7 @@ import { hashPass, verifyPass } from "../utils/hashPass";
 import prisma from "../db";
 import jwt from "jsonwebtoken";
 import { authMiddleware } from "../middleware/auth.middleware";
+import AuthControllers from "@controllers/auth.controllers";
 
 interface RegisterBody {
   username?: string;
@@ -17,38 +18,7 @@ interface Login {
 
 const router = express.Router();
 
-router.post(
-  "/login",
-  async function (req: Request<{}, {}, Login>, res: Response) {
-    try {
-      const { email, password } = req.body;
-      if (!email || !password) {
-        throw new Error("Email or password error2");
-      }
-      if (email) {
-        const existingUser = await prisma.user.findUnique({
-          where: { email },
-          select: { id: true, password: true },
-        });
-        if (!existingUser) {
-          throw new Error("Пользователь не найден");
-        }
-        const matchPassword = await verifyPass(password, existingUser.password);
-        if (!matchPassword) {
-          throw new Error("Неверный пароль");
-        }
-        const token = jwt.sign(
-          { userId: existingUser.id },
-          process.env.SECRET_KEY || "secret",
-          { expiresIn: "7d" }
-        );
-        return res.status(200).json({ token });
-      }
-    } catch (e) {
-      return res.status(400).json({ error: e });
-    }
-  }
-);
+router.post("/login", AuthControllers.login);
 router.post(
   "/logout",
   authMiddleware,
