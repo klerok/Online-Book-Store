@@ -1,4 +1,4 @@
-import { verifyPass } from "@utils/hashPass";
+import { hashPass, verifyPass } from "@utils/hashPass";
 import Send from "@utils/response.utils";
 import prisma from "db";
 import { Request, Response } from "express";
@@ -6,6 +6,7 @@ import authSchema from "validations/auth.schema";
 import z from "zod";
 import jwt from "jsonwebtoken";
 import authConfig from "@config/auth.config";
+
 class AuthControllers {
   static async login(req: Request, res: Response) {
     const { email, password } = req.body as z.infer<typeof authSchema.login>;
@@ -49,6 +50,32 @@ class AuthControllers {
     } catch (error) {
       console.error("Login failed:", error);
       return Send.error(res, null, "Login failed");
+    }
+  }
+
+  static async Register(req: Request, res: Response) {
+    const { username, email, password, password_confirmation } = req.body;
+    try {
+      const existingUser = await prisma.user.findUnique({
+        where: { email },
+        select: { id: true },
+      });
+      if (existingUser) {
+        return Send.error(res, null, 'Email already in use');
+      }
+      const hashedPass = await hashPass(password)
+      const newUser = await prisma.user.create({
+        data: { username, email, password: hashedPass },
+      });
+      return Send.success(res, {
+        id: newUser.id,
+        username: newUser.username,
+        email: newUser.email
+      }, 'User successfully registered')
+      
+    } catch (error) {
+      console.error('Registration failed:', error)
+      return Send.error(res, null, 'Registration failed')
     }
   }
 }
