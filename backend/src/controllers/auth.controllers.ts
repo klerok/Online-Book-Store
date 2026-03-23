@@ -54,7 +54,7 @@ class AuthControllers {
   }
 
   static async Register(req: Request, res: Response) {
-    const { username, email, password, password_confirmation } = req.body;
+    const { username, email, password } = req.body;
     try {
       const existingUser = await prisma.user.findUnique({
         where: { email },
