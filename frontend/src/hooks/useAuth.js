@@ -1,37 +1,26 @@
-import { useContext, useEffect } from "react";
-import { useLocalStorage } from "./useLocalStorage";
+import { useContext } from "react";
 import { login, logout } from "../api/auth";
 import { AuthContext } from "../contexts/authContext";
 
 export const useAuth = () => {
-  const { token, setToken } = useContext(AuthContext);
-  const { getItem, setItem, removeItem } = useLocalStorage();
-
-  useEffect(() => {
-    const savedToken = getItem("token");
-    if (savedToken) {
-      setToken(savedToken);
-    }
-  }, [getItem, setToken]);
+  const { user, setUser } = useContext(AuthContext);
 
   const loginUser = async (email, password) => {
-    const data = await login(email, password);
-    const newToken = data.token;
-    setToken(newToken);
-    setItem("token", newToken);
+    const response = await login(email, password);
+    const loggedUser = response?.user;
+    if (!loggedUser) throw new Error("Invalid login response");
+    setUser(loggedUser);
   };
 
   const logoutUser = async () => {
-    if (token) {
-      try {
-        await logout(token);
-      } catch (error) {
-        console.error("Failed to logout", error);
-      }
+    try {
+      await logout();
+    } catch (error) {
+      console.error("Failed to logout", error);
+    } finally {
+      setUser(null);
     }
-    setToken(null);
-    removeItem("token");
   };
 
-  return { token, loginUser, logoutUser, isAuthenticated: !!token };
+  return { user, loginUser, logoutUser, isAuthenticated: !!user };
 };

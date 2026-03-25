@@ -4,13 +4,36 @@ import { HomePage } from "../pages/Home";
 import { LoginPage } from "../pages/Login";
 import { RegisterPage } from "../pages/Register";
 import { AuthContext } from "../contexts/authContext";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { me } from "../api/auth";
 
 export function App() {
-  const [token, setToken] = useState(() => localStorage.getItem("token"));
+  const [user, setUser] = useState(null);
+  const [authLoading, setAuthLoading] = useState(true);
+
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      try {
+        const response = await me();
+        if (!mounted) return;
+        setUser(response?.data ?? null);
+      } catch (error) {
+        if (!mounted) return;
+        setUser(null);
+      } finally {
+        if (mounted) setAuthLoading(false);
+      }
+    })();
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  if (authLoading) return null;
 
   return (
-    <AuthContext.Provider value={{ token, setToken }}>
+    <AuthContext.Provider value={{ user, setUser }}>
       <Routes>
         <Route path="/" element={<Layout />}>
           <Route index element={<HomePage />} />

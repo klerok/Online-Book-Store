@@ -8,15 +8,17 @@ import { register } from "../../api/auth";
 
 export function RegisterPage() {
   const [showPassword, setShowPassword] = useState(false);
+  const [showPasswordConfirmation, setShowPasswordConfirmation] = useState(false);
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const navigate = useNavigate()
+  const [passwordConfirmation, setPasswordConfirmation] = useState("");
+  const navigate = useNavigate();
 
   async function handleSubmit(e) {
     e.preventDefault();
     try {
-      await register(username, email, password);
+      await register(username, email, password, passwordConfirmation);
       alert("Registration successful! You can now login.");
       navigate("/login");
     } catch (error) {
@@ -83,6 +85,34 @@ export function RegisterPage() {
                 aria-label={showPassword ? "Скрыть пароль" : "Показать пароль"}
               >
                 {showPassword ? <PasswordIconView /> : <PasswordIconHide />}
+              </button>
+            </div>
+          </div>
+          <div className={styles.field}>
+            <label
+              htmlFor="register-password-confirmation"
+              className={styles.label}
+            >
+              Подтверждение пароля
+            </label>
+            <div className={styles.inputWrap}>
+              <input
+                id="register-password-confirmation"
+                type={showPasswordConfirmation ? "text" : "password"}
+                name="password_confirmation"
+                className={styles.input}
+                autoComplete="new-password"
+                required
+                value={passwordConfirmation}
+                onChange={(e) => setPasswordConfirmation(e.target.value)}
+              />
+              <button
+                type="button"
+                className={styles.toggle}
+                onClick={() => setShowPasswordConfirmation((prev) => !prev)}
+                aria-label={showPasswordConfirmation ? "Скрыть пароль" : "Показать пароль"}
+              >
+                {showPasswordConfirmation ? <PasswordIconView /> : <PasswordIconHide />}
               </button>
             </div>
           </div>

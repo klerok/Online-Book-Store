@@ -15,21 +15,24 @@ datasource db {
 }
 
 model User {
-  id       Int      @id @default(autoincrement())
+  userId   Int      @id @default(autoincrement())
   username String   @unique
   email    String   @unique
   password String
   createAt DateTime @default(now())
-  posts    Post[]
+
+  sessions Session[]
 }
 
-model Post {
-  id      Int     @id @default(autoincrement())
-  title   String
-  content String?
+model Session {
+  id          Int       @id @default(autoincrement())
+  userId      Int
+  refreshHash String
+  expiresAt   DateTime
+  revokedAt   DateTime?
+  createdAt   DateTime  @default(now())
 
-  // Поле для хранения ID автора
-  authorId Int
-  // Описание связи: поле authorId ссылается на id в модели User
-  author   User @relation(fields: [authorId], references: [id])
+  user User @relation(fields: [userId], references: [userId], onDelete: Cascade)
+
+  @@index([userId])
 }

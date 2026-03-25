@@ -1,4 +1,4 @@
-import { hashPass, verifyPass } from "@utils/hashPass";
+import { hashPass, hashRefreshToken, verifyPass } from "@utils/hashPass";
 import AuthRepository from "repositories/auth.repository";
 import jwt from "jsonwebtoken";
 import authConfig from "@config/auth.config";
@@ -10,7 +10,7 @@ interface RegisterInput {
 }
 
 interface RegisterResult {
-  id: number;
+  userId: number;
   username: string;
   email: string;
 }
@@ -21,7 +21,7 @@ interface LoginInput {
 }
 
 interface LoginResult {
-  user: { id: number; username: string; email: string };
+  user: { userId: number; username: string; email: string };
   accessToken: string;
   refreshToken: string;
 }
@@ -45,21 +45,39 @@ class AuthService {
     if (!user) {
       throw new Error("Invalid credentials");
     }
+
     const isPasswordValid = await verifyPass(input.password, user.password);
     if (!isPasswordValid) {
       throw new Error("Invalid credentials");
     }
-    const accessToken = jwt.sign({ userId: user.id }, authConfig.secret, {
+
+    const accessToken = jwt.sign({ userId: user.userId }, authConfig.secret, {
       expiresIn: authConfig.secret_expires_in as any,
     });
+
     const refreshToken = jwt.sign(
-      { userId: user.id },
+      { userId: user.userId },
       authConfig.refresh_secret,
       { expiresIn: authConfig.refresh_secret_expires_in as any }
     );
+    const hashedRefreshToken = await hashRefreshToken(refreshToken);
+    const decodedRefresh = jwt.verify(refreshToken, authConfig.refresh_secret);
+    if (typeof decodedRefresh === "string")
+      throw new Error("Invalid refresh token");
+    const exp = (decodedRefresh as jwt.JwtPayload).exp;
+    if (!exp) throw new Error("Invalid refresh token");
+    const expiresAt = new Date(exp * 1000);
+
+    const session = await AuthRepository.createSession(
+      user.userId,
+      hashedRefreshToken,
+      expiresAt
+    );
+    if (!session) throw new Error("Failed to create session");
+
     return {
       user: {
-        id: user.id,
+        userId: user.userId,
         username: user.username,
         email: user.email,
       },
@@ -67,4 +85,40 @@ class AuthService {
       refreshToken,
     };
   }
+
+  static async getMe(userId: number) {
+    return AuthRepository.findPublicById(userId);
+  }
+
+  static async logoutCurrent(refreshToken: string) {
+    const decoded = jwt.verify(refreshToken, authConfig.refresh_secret);
+    if (typeof decoded === "string") throw new Error("Invalid refresh token");
+
+    const userId = decoded.userId;
+    if (typeof userId !== "number")
+      throw new Error("Invalid refresh token userId");
+
+    const refreshHash = await hashRefreshToken(refreshToken);
+    const sessions = await AuthRepository.findActiveSessionByUserId(userId);
+    if (!sessions || sessions.length === 0)
+      throw new Error("No active sessions found");
+    const matchedSession = sessions.filter(
+      (s) => s.refreshHash === refreshHash
+    );
+    if (matchedSession.length === 0)
+      throw new Error("no active session for this token");
+    await Promise.all(
+      matchedSession.map((s) => AuthRepository.revokeSessionById(s.id))
+    );
+    return { message: "Logged out successfully" };
+  }
+
+  static async logoutAll(userId: number) {
+    if (typeof userId !== "number") throw new Error("Invalid userId");
+
+    await AuthRepository.revokeSessionsByUserId(userId);
+    return { message: "Logged out from all devices" };
+  }
 }
+
+export default AuthService;
