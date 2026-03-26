@@ -1,5 +1,6 @@
 import { NextFunction, Request, Response } from "express";
 import z from "zod";
+import Send from "@utils/response.utils";
 
 interface ValidateSchemas<
   TBody = unknown,
@@ -15,7 +16,7 @@ function toFieldErrors(error: z.ZodError): Record<string, string[]> {
   return z.flattenError(error).fieldErrors;
 }
 
-export function validateMiddleware<
+export function validate<
   TBody = unknown,
   TParams extends Request["params"] = Request["params"],
   TQuery extends Request["query"] = Request["query"]
@@ -28,7 +29,7 @@ export function validateMiddleware<
       if (!result.success) {
         Object.assign(errors, toFieldErrors(result.error));
       } else {
-        req.body = result.data;
+        req.body = result.data as Request["body"];
       }
     }
 
@@ -37,17 +38,22 @@ export function validateMiddleware<
       if (!result.success) {
         Object.assign(errors, toFieldErrors(result.error));
       } else {
-        req.params = result.data;
+        req.params = result.data as Request["params"];
       }
     }
 
     if (schemas.query) {
       const result = schemas.query.safeParse(req.query);
       if (!result.success) {
-        Object.assign(errors, toFieldErrors(result.error))
+        Object.assign(errors, toFieldErrors(result.error));
       } else {
-        req.query = result.data
+        req.query = result.data as Request["query"];
       }
     }
+
+    if (Object.keys(errors).length > 0) {
+      return Send.validationErrors(res, errors);
+    }
+    return next();
   };
 }
