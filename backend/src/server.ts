@@ -4,6 +4,7 @@ import cors from "cors";
 import cookieParser from "cookie-parser";
 import authRouter from "./api/auth";
 import { errorMiddleware } from "middleware/error.middleware";
+import { notFoundMiddleware } from "middleware/notFound.middleware";
 
 const app = express();
 
@@ -17,6 +18,7 @@ app.get("/", (req, res) => {
   res.status(200).json({ status: "ok!!!!!!" });
 });
 
+app.use(notFoundMiddleware)
 app.use(errorMiddleware as ErrorRequestHandler);
 
 const PORT = 3000;
