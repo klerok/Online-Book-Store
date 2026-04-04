@@ -1,6 +1,6 @@
 .root {
-  background: var(--color-surface);
-  box-shadow: var(--shadow);
+  background: url('../../../../assets/bg-header.png') no-repeat center center;
+  background-size: cover;
 }
 
 .inner {
@@ -25,12 +25,6 @@
   color: var(--color-primary);
 }
 
-.nav {
-  display: flex;
-  align-items: center;
-  gap: 1.5rem;
-}
-
 .link {
   color: var(--color-text-muted);
   text-decoration: none;
@@ -51,9 +45,3 @@
   color: var(--color-primary-hover);
 }
 
-@media (max-width: 480px) {
-  .inner {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-}

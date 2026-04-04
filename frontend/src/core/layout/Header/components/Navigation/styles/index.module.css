@@ -1,0 +1,33 @@
+.nav {
+  display: flex;
+  align-items: center;
+  gap: 45px;
+}
+
+.logo_container {
+  display: flex;
+  align-items: center;
+  gap: 17px;
+  font-weight: 700;
+  font-size: 1.25rem;
+  color: #cc9600;
+  text-decoration: none;
+}
+
+.logo_container:hover {
+  text-decoration: none;
+}
+
+.link {
+  text-decoration: none;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.link_accent {
+  color: #d49e07;
+}
+
+.link_accent:hover {
+  color: #d49e07;
+}
