@@ -1,0 +1,16 @@
+.container {
+  background: #ffffff;
+  padding: 106px 0;
+}
+
+.recommendations_content {
+  display: flex;
+  flex-direction: column;
+  gap: 79px;
+  align-items: center;
+}
+
+.recommendations_title {
+  font-size: 48px;
+  font-weight: 700;
+}

@@ -1,0 +1,72 @@
+.swiper_container {
+  width: 100%;
+  max-width: 1280px;
+  box-sizing: border-box;
+}
+
+.list_best_books {
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(4,200px);
+  justify-content: center;
+  gap: 20px;
+}
+
+.book_title {
+  font-weight: 700;
+  margin-top: 16px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 200px;
+  cursor: pointer
+}
+
+.card {
+  cursor: pointer;
+}
+
+.book_author {
+  font-weight: 400;
+}
+
+.cover_placeholder {
+  height: 283px;
+  width: 200px;
+  background: #f5f5f5;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cover_placeholder_text {
+  font-weight: 400;
+  font-size: 16px;
+}
+
+.cover_image {
+  max-width: 100%;
+  display: block;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+}
+
+.swiper_container :global(.swiper) {
+  padding-bottom: 48px;
+}
+
+:global(.swiper-pagination) {
+  position: static;
+}
+
+:global(.swiper-pagination-bullet) {
+  width: 18px;
+  height: 18px;
+  background: transparent;
+  border: 2px solid #5da9e9;
+  opacity: 1;
+}
+
+:global(.swiper-pagination-bullet-active) {
+  background: #5da9e9;
+}

@@ -1,4 +1,8 @@
-*, *::before, *::after {
+@import url("https://fonts.googleapis.com/css2?family=Bona+Nova:ital,wght@0,400;0,700;1,400&family=Jost:ital,wght@0,100..900;1,100..900&display=swap");
+
+*,
+*::before,
+*::after {
   box-sizing: border-box;
 }
 
@@ -13,12 +17,12 @@
   --color-error: #dc2626;
   --radius: 8px;
   --shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
-  --font-sans: system-ui, -apple-system, sans-serif;
+  --font-family: "Bona Nova", sans-serif;
 }
 
 body {
   margin: 0;
-  font-family: var(--font-sans);
+  font-family: var(--font-family);
   font-size: 16px;
   line-height: 1.5;
   color: var(--color-text);
@@ -39,7 +43,8 @@ a:hover {
   text-decoration: underline;
 }
 
-input, button {
+input,
+button {
   font-family: inherit;
   font-size: 1rem;
 }

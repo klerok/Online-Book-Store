@@ -9,11 +9,13 @@
   text-decoration: none;
   font-weight: 500;
   cursor: pointer;
+  font-size: 20px;
 }
 
 .link_accent {
   color: #cc9600;
   font-weight: 500;
+  font-size: 20px;
 }
 
 .link_accent:hover {
