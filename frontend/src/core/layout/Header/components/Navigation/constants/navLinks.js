@@ -19,14 +19,14 @@ export const navLinks = [
   },
   {
     id: 3,
-    label: 'Delivery Team',
-    to: '/delivery-team',
+    label: 'Support',
+    to: '/support',
     isActive: true,
   },
   {
     id: 4,
-    label: 'Sellers',
-    to: '/sellers',
+    label: 'Contact',
+    to: '/contact',
     isActive: true,
   },
 ]
