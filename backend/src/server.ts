@@ -1,3 +1,4 @@
+import 'dotenv/config'
 import express, { ErrorRequestHandler } from "express";
 import cors from "cors";
 // import { pool } from "./db";

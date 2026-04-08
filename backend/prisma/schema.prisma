@@ -14,14 +14,25 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum UserRole {
+  CUSTOMER
+  SUPPORT_AGENT
+  ADMIN
+}
+
 model User {
   userId   Int      @id @default(autoincrement())
   username String   @unique
   email    String   @unique
   password String
+  role     UserRole @default(CUSTOMER)
   createAt DateTime @default(now())
 
+  conversations             ChatConversation[] @relation("CustomerConversations")
+  supportAgentConversations ChatConversation[] @relation("SupportAgentConversations")
+
   sessions Session[]
+  messages ChatMessage[]
 }
 
 model Session {
@@ -35,4 +46,36 @@ model Session {
   user User @relation(fields: [userId], references: [userId], onDelete: Cascade)
 
   @@index([userId])
+}
+
+model ChatConversation {
+  chatId         Int      @id @default(autoincrement())
+  customerId     Int
+  supportAgentId Int?
+  status         String   @default("open")
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  customer     User  @relation("CustomerConversations", fields: [customerId], references: [userId], onDelete: Cascade)
+  supportAgent User? @relation("SupportAgentConversations", fields: [supportAgentId], references: [userId], onDelete: SetNull)
+
+  messages ChatMessage[]
+
+  @@index([customerId])
+  @@index([supportAgentId])
+  @@index([status])
+}
+
+model ChatMessage {
+  messageId Int      @id @default(autoincrement())
+  chatId    Int
+  senderId  Int
+  content   String
+  createdAt DateTime @default(now())
+
+  conversation ChatConversation @relation(fields: [chatId], references: [chatId], onDelete: Cascade)
+  sender       User             @relation(fields: [senderId], references: [userId], onDelete: Cascade)
+
+  @@index([chatId, createdAt])
+  @@index([senderId])
 }

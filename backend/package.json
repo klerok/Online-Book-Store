@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "main": "server.js",
   "scripts": {
-    "dev": "ts-node-dev --respawn src/server.ts",
+    "dev": "ts-node-dev --respawn --files -r tsconfig-paths/register src/server.ts",
     "build": "tsc",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -20,6 +20,7 @@
     "@types/pg": "^8.16.0",
     "prisma": "^6.19.2",
     "ts-node-dev": "^2.0.0",
+    "tsconfig-paths": "^4.2.0",
     "typescript": "^5.9.3"
   },
   "dependencies": {
