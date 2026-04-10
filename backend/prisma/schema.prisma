@@ -20,6 +20,16 @@ enum UserRole {
   ADMIN
 }
 
+enum ConversationStatus {
+  OPEN
+  CLOSED
+}
+
+enum ParticipantRole {
+  CUSTOMER
+  SUPPORT_AGENT
+}
+
 model User {
   userId   Int      @id @default(autoincrement())
   username String   @unique
@@ -28,8 +38,8 @@ model User {
   role     UserRole @default(CUSTOMER)
   createAt DateTime @default(now())
 
-  conversations             ChatConversation[] @relation("CustomerConversations")
-  supportAgentConversations ChatConversation[] @relation("SupportAgentConversations")
+  conversation     ChatConversation[] @relation("CustomerConversation")
+  chatParticipants ChatParticipant[]
 
   sessions Session[]
   messages ChatMessage[]
@@ -49,21 +59,39 @@ model Session {
 }
 
 model ChatConversation {
-  chatId         Int      @id @default(autoincrement())
-  customerId     Int
-  supportAgentId Int?
-  status         String   @default("open")
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  chatId        Int                @id @default(autoincrement())
+  customerId    Int                
+  status        ConversationStatus @default(OPEN)
+  createdAt     DateTime           @default(now())
+  updatedAt     DateTime           @updatedAt
+  lastMessageAt DateTime?
+  hiddenByCustomerAt DateTime?
 
-  customer     User  @relation("CustomerConversations", fields: [customerId], references: [userId], onDelete: Cascade)
-  supportAgent User? @relation("SupportAgentConversations", fields: [supportAgentId], references: [userId], onDelete: SetNull)
+  customer User @relation("CustomerConversation", fields: [customerId], references: [userId], onDelete: Cascade)
 
-  messages ChatMessage[]
+  participants ChatParticipant[]
+  messages     ChatMessage[]
 
-  @@index([customerId])
-  @@index([supportAgentId])
   @@index([status])
+  @@index([lastMessageAt])
+
+  
+}
+
+model ChatParticipant {
+  id         Int             @id @default(autoincrement())
+  chatId     Int
+  userId     Int
+  roleInChat ParticipantRole
+  joinedAt   DateTime        @default(now())
+  leftAt     DateTime?
+
+  conversation ChatConversation @relation(fields: [chatId], references: [chatId], onDelete: Cascade)
+  user         User             @relation(fields: [userId], references: [userId], onDelete: Cascade)
+
+  @@unique([chatId, userId])
+  @@index([userId])
+  @@index([chatId, roleInChat])
 }
 
 model ChatMessage {
