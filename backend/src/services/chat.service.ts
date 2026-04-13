@@ -7,16 +7,7 @@ import {
 import AuthRepository from "repositories/auth.repository";
 import ChatRepository from "repositories/chat.repository";
 
-/**
- * Слой «как chatService.ts в учебном примере», но для чата поддержки магазина:
- *
- * - **room (комната в примере)** → `SupportRoomId` = id обращения (`chatId` в БД).
- * - **getRoomHistory** → читает сообщения из PostgreSQL (в примере был `Map` в памяти).
- * - **addUserMessage** → пишет сообщение в БД (в примере пушили в массив комнаты).
- *
- * В примере ещё был **addSystemMessage** в память; у нас системные подсказки в основном
- * на клиенте, отдельной записи в БД для «системы» нет.
- */
+
 export type SupportRoomId = number;
 
 const MAX_MESSAGE_LENGTH = 2000;
