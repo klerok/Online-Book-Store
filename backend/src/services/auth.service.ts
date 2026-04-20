@@ -64,7 +64,7 @@ class AuthService {
     const refreshToken = jwt.sign(
       { userId: user.userId },
       authConfig.refresh_secret,
-      { expiresIn: authConfig.refresh_secret_expires_in as any }
+      { expiresIn: authConfig.refresh_secret_expires_in }
     );
     const hashedRefreshToken = await hashRefreshToken(refreshToken);
     const decodedRefresh = jwt.verify(refreshToken, authConfig.refresh_secret);

@@ -12,7 +12,6 @@ function bubbleClass(msg, stylesObj) {
   return stylesObj.bubbleSupport;
 }
 
-/** Правая колонка: шапка, пустое состояние или переписка + ввод. */
 export function SupportChatPanel({ desk }) {
   const {
     selectedChatId,
