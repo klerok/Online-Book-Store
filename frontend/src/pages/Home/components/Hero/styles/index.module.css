@@ -1,10 +1,20 @@
 .container {
-  background: url("../../../../../assets/bg-hero.png");
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
-  min-height: calc(100vh - 130px);
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1536 / 863;
+  min-height: 620px;        
+  background: #05060a;
+  overflow: hidden;
   padding-top: 68px;
+}
+
+.hero_bg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: fill;
+  object-position: center;
 }
 
 .hero_content {
@@ -14,6 +24,8 @@
   flex-direction: column;
   align-items: center;
   gap: 42px;
+  position: relative;
+  z-index: 1;
 }
 
 .hero_content_text {
@@ -62,6 +74,11 @@
   border: none;
   background: transparent;
   margin-left: 36px;
+  color: #fff;
+}
+
+.search_input:focus {
+  outline: none;
 }
 
 .search_input::placeholder {

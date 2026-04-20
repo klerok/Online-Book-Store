@@ -1,4 +1,5 @@
 import styles from "./styles/index.module.css";
+import heroImg from "../../../../assets/bg-hero.png";
 
 export function Hero() {
   function handleSubmit(e) {
@@ -7,6 +8,12 @@ export function Hero() {
 
   return (
     <section className={styles.container}>
+      <img
+        src={heroImg}
+        alt="background"
+        aria-hidden="true"
+        className={styles.hero_bg}
+      />
       <div className={styles.hero_content}>
         <div className={styles.hero_content_text}>
           <h1 className={styles.hero_title}>
