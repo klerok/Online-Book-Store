@@ -4,13 +4,7 @@ import {
   ParticipantRole,
   UserRole,
 } from "generated/prisma";
-
-interface ListCustomerChatsOptions {
-  status?: ConversationStatus;
-  includeHidden?: boolean;
-  take?: number;
-  cursor?: number;
-}
+import type { ListCustomerChatsOptions } from "types/chat/repository.types";
 class ChatRepository {
   static async createMessage(
     chatId: number,

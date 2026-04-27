@@ -1,16 +1,7 @@
 import { NextFunction, Request, Response } from "express";
 import z from "zod";
 import Send from "@utils/response.utils";
-
-interface ValidateSchemas<
-  TBody = unknown,
-  TParams extends Request["params"] = Request["params"],
-  TQuery extends Request["query"] = Request["query"]
-> {
-  body?: z.ZodType<TBody>;
-  params?: z.ZodType<TParams>;
-  query?: z.ZodType<TQuery>;
-}
+import type { ValidateSchemas } from "types/middleware/validate.types";
 
 function toFieldErrors(error: z.ZodError): Record<string, string[]> {
   return z.flattenError(error).fieldErrors;

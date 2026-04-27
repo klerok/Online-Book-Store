@@ -1,25 +1,55 @@
 import type { Server, Socket } from "socket.io";
 import ChatService from "services/chat.service";
-
-type SocketData = {
-  userId?: number;
-  activeChatId?: number;
-};
-
-type JoinPayload = {
-  chatId: number;
-};
-
-type SendPayload = {
-  chatId: number;
-  content: string;
-};
-
-type JoinAck = { ok: true } | { ok: false; error: string };
-type SendAck = { ok: true } | { ok: false; error: string };
+import type {
+  ChatEncryptedMessage,
+  ChatMessage,
+  JoinAck,
+  JoinPayload,
+  SendAck,
+  SendPayload,
+  SocketData,
+} from "types/chat/socket.types";
+import {
+  createDhServerHandshake,
+  decryptText,
+  encryptMessage,
+} from "./chatCrypto";
 
 function channelForChat(chatId: number) {
   return `chat:${chatId}`;
+}
+
+async function emitEncryptedHistory(
+  socket: Socket,
+  chatId: number,
+  sharedKey: Buffer
+) {
+  const history = await ChatService.getRoomHistory(chatId);
+  const encryptedHistory: ChatEncryptedMessage[] = history.map((message) =>
+    encryptMessage(message, sharedKey)
+  );
+  socket.emit("chat:history", { chatId, messages: encryptedHistory });
+}
+
+function emitEncryptedMessageToRoom(
+  io: Server,
+  chatId: number,
+  message: ChatMessage
+) {
+  const room = channelForChat(chatId);
+  const memberIds = io.sockets.adapter.rooms.get(room);
+  if (!memberIds) return;
+
+  for (const socketId of memberIds) {
+    const memberSocket = io.sockets.sockets.get(socketId);
+    if (!memberSocket) continue;
+
+    const memberData = memberSocket.data as SocketData;
+    const sharedKey = memberData.sharedKey;
+    if (!sharedKey) continue;
+
+    memberSocket.emit("chat:message", encryptMessage(message, sharedKey));
+  }
 }
 
 export function registerChatHandlers(io: Server) {
@@ -42,6 +72,9 @@ export function registerChatHandlers(io: Server) {
             return;
           }
 
+          const handshake = createDhServerHandshake(payload.clientPublicKey);
+          data.sharedKey = handshake.sharedKey;
+
           await ChatService.joinRoom({ userId, room: chatId });
 
           const prev = data.activeChatId;
@@ -52,13 +85,12 @@ export function registerChatHandlers(io: Server) {
           data.activeChatId = chatId;
           socket.join(channelForChat(chatId));
 
-          const [messages, ticket] = await Promise.all([
-            ChatService.getRoomHistory(chatId),
-            ChatService.getTicketByChatId(chatId),
-          ]);
+          const ticket = await ChatService.getTicketByChatId(chatId);
 
-          socket.emit("chat:history", { chatId, messages, ticket });
-          callback?.({ ok: true });
+          callback?.({ ok: true, serverPublicKey: handshake.serverPublicKey });
+
+          await emitEncryptedHistory(socket, chatId, handshake.sharedKey);
+          socket.emit("chat:ticket", { chatId, ticket });
         } catch (e) {
           callback?.({
             ok: false,
@@ -86,12 +118,20 @@ export function registerChatHandlers(io: Server) {
             return;
           }
 
+          const sharedKey = data.sharedKey;
+          if (!sharedKey) {
+            callback?.({ ok: false, error: "Не установлен защищенный канал" });
+            return;
+          }
+
+          const plainText = decryptText(payload.encrypted, sharedKey);
+
           const message = await ChatService.addUserMessage({
             room: chatId,
             userId: data.userId,
-            text: payload.content,
+            text: plainText,
           });
-          io.to(channelForChat(chatId)).emit("chat:message", message);
+          emitEncryptedMessageToRoom(io, chatId, message);
           callback?.({ ok: true });
         } catch (e) {
           callback?.({
@@ -108,6 +148,7 @@ export function registerChatHandlers(io: Server) {
         socket.leave(channelForChat(id));
       }
       data.activeChatId = undefined;
+      data.sharedKey = undefined;
     });
   });
 }

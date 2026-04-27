@@ -6,9 +6,11 @@ import {
 } from "generated/prisma";
 import AuthRepository from "repositories/auth.repository";
 import ChatRepository from "repositories/chat.repository";
-
-
-export type SupportRoomId = number;
+import type { CreateTicketInput, SupportRoomId } from "types/chat/domain.types";
+import type {
+  AddUserMessageParams,
+  JoinRoomParams,
+} from "types/chat/service.types";
 
 const MAX_MESSAGE_LENGTH = 2000;
 const MAX_TITLE_LENGTH = 200;
@@ -17,12 +19,6 @@ const DEFAULT_HISTORY_TAKE = 50;
 
 function normalizeText(text: string): string {
   return text.trim().replace(/\s+/g, " ");
-}
-
-interface CreateTicketInput {
-  customerId: number;
-  title: string;
-  description: string | null;
 }
 
 class ChatService {
@@ -34,11 +30,7 @@ class ChatService {
     return [...newestFirst].reverse();
   }
 
-  static async addUserMessage(params: {
-    room: SupportRoomId;
-    userId: number;
-    text: string;
-  }) {
+  static async addUserMessage(params: AddUserMessageParams) {
     const content = normalizeText(params.text);
     if (!content) throw new Error("Empty message");
     if (content.length > MAX_MESSAGE_LENGTH)
@@ -63,7 +55,7 @@ class ChatService {
     return message;
   }
 
-  static async joinRoom(params: { room: SupportRoomId; userId: number }) {
+  static async joinRoom(params: JoinRoomParams) {
     const { userId, room: chatId } = params;
     const chat = await ChatRepository.findConversationById(chatId);
     if (!chat) throw new Error("Chat not found");

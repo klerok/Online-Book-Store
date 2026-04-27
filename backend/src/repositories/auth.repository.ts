@@ -1,11 +1,8 @@
 import prisma from "db";
+import type { CreateUserParams } from "types/auth/repository.types";
 
 class AuthRepository {
-  static async createUser(data: {
-    username: string;
-    email: string;
-    password: string;
-  }) {
+  static async createUser(data: CreateUserParams) {
     return prisma.user.create({
       data,
       select: { userId: true, username: true, email: true },

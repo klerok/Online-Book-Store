@@ -1,5 +1,15 @@
-import { createCipheriv, createDecipheriv, createHash, randomBytes } from "node:crypto";
-import { ChatEncryptedMessage, ChatEncryptedText, ChatMessage } from "./chatTypes";
+import {
+  createCipheriv,
+  createDecipheriv,
+  createHash,
+  randomBytes,
+} from "node:crypto";
+import {
+  ChatEncryptedMessage,
+  ChatEncryptedText,
+  ChatMessage,
+} from "types/chat/socket.types";
+import type { DhServerHandshake } from "types/chat/crypto.types";
 
 const DH_PRIME_HEX =
   "FFFFFFFFFFFFFFFFC90FDAA22168C234C4C6628B80DC1CD129024E088A67CC74" +
@@ -49,10 +59,9 @@ function sharedSecretToAesKey(sharedSecret: bigint): Buffer {
   return createHash("sha256").update(sharedSecret.toString(16)).digest();
 }
 
-export function createDhServerHandshake(clientPublicKey: string): {
-  serverPublicKey: string;
-  sharedKey: Buffer;
-} {
+export function createDhServerHandshake(
+  clientPublicKey: string
+): DhServerHandshake {
   const peerPublic = parsePeerPublicKey(clientPublicKey);
   const privateKey = randomPrivateKey();
   const serverPublic = modPow(DH_GENERATOR, privateKey, DH_PRIME);
@@ -81,24 +90,29 @@ export function encryptText(
   };
 }
 
-export function decryptText(payload: ChatEncryptedText, sharedKey: Buffer): string {
-    const iv = Buffer.from(payload.iv, 'base64')
-    const combined = Buffer.from(payload.ciphertext, 'base64')
-    if (combined.length < 16)
-        throw new Error('Invalid ciphertext format')
+export function decryptText(
+  payload: ChatEncryptedText,
+  sharedKey: Buffer
+): string {
+  const iv = Buffer.from(payload.iv, "base64");
+  const combined = Buffer.from(payload.ciphertext, "base64");
+  if (combined.length < 16) throw new Error("Invalid ciphertext format");
 
-    const encrypted = combined.subarray(0, combined.length - 16)
-    const authTag = combined.subarray(combined.length - 16)
-    const decipher = createDecipheriv('aes-256-gcm', sharedKey, iv)
-    decipher.setAuthTag(authTag)
+  const encrypted = combined.subarray(0, combined.length - 16);
+  const authTag = combined.subarray(combined.length - 16);
+  const decipher = createDecipheriv("aes-256-gcm", sharedKey, iv);
+  decipher.setAuthTag(authTag);
 
-    const plain = Buffer.concat([decipher.update(encrypted), decipher.final()])
-    return plain.toString('utf8')
+  const plain = Buffer.concat([decipher.update(encrypted), decipher.final()]);
+  return plain.toString("utf8");
 }
 
-export function encryptMessage(message: ChatMessage, sharedKey: Buffer): ChatEncryptedMessage {
-    return {
-        ...message,
-        text: encryptText(message.text, sharedKey)
-    }
-} 
+export function encryptMessage(
+  message: ChatMessage,
+  sharedKey: Buffer
+): ChatEncryptedMessage {
+  return {
+    ...message,
+    content: encryptText(message.content, sharedKey),
+  };
+}

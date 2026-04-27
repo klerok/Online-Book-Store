@@ -6,6 +6,7 @@ import AuthRepository from "repositories/auth.repository";
 import ChatService from "services/chat.service";
 import { getSocketIO } from "socket/ioInstance";
 import Send from "@utils/response.utils";
+import type { CreateTicketRequestBody } from "types/api/chat.types";
 
 
 const router = express.Router();
@@ -73,10 +74,7 @@ router.post(
         "Только покупатели могут создавать обращения"
       );
     }
-    const { title, description } = req.body as {
-      title: string;
-      description?: string | null;
-    };
+    const { title, description } = req.body as CreateTicketRequestBody;
     const result = await ChatService.createTicket({
       customerId: userId,
       title,

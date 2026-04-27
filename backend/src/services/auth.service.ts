@@ -2,35 +2,12 @@ import { hashPass, hashRefreshToken, verifyPass } from "@utils/hashPass";
 import AuthRepository from "repositories/auth.repository";
 import jwt from "jsonwebtoken";
 import authConfig from "@config/auth.config";
-import type { UserRole } from "generated/prisma";
-
-interface RegisterInput {
-  username: string;
-  email: string;
-  password: string;
-}
-
-interface RegisterResult {
-  userId: number;
-  username: string;
-  email: string;
-}
-
-interface LoginInput {
-  email: string;
-  password: string;
-}
-
-interface LoginResult {
-  user: {
-    userId: number;
-    username: string;
-    email: string;
-    role: UserRole;
-  };
-  accessToken: string;
-  refreshToken: string;
-}
+import type {
+  LoginInput,
+  LoginResult,
+  RegisterInput,
+  RegisterResult,
+} from "types/auth/service.types";
 
 class AuthService {
   static async register(input: RegisterInput): Promise<RegisterResult> {
