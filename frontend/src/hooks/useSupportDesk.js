@@ -58,7 +58,7 @@ export function useSupportDesk(user) {
 
   const socketHandlers = useMemo(
     () => ({
-      onChatHistory: ({ chatId, messages: historyMsgs, ticket }) => {
+      onChatHistory: ({ chatId, messages: historyMsgs }) => {
         const u = userRef.current;
         if (!u || chatId !== selectedChatIdRef.current) return;
         const mapped = (historyMsgs ?? []).map((m) =>
@@ -69,8 +69,11 @@ export function useSupportDesk(user) {
         setMessages(
           prepend ? [systemAcceptedMessage(chatId), ...mapped] : mapped
         );
-        setActiveTicket(ticket ?? null);
         setMessagesLoading(false);
+      },
+      onChatTicket: ({ chatId, ticket }) => {
+        if (chatId !== selectedChatIdRef.current) return;
+        setActiveTicket(ticket ?? null);
       },
       onChatMessage: (payload) => {
         const u = userRef.current;
