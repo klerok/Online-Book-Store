@@ -49,10 +49,12 @@ export function mapServerMessage(msg, currentUserId) {
   const mine = msg.senderId === currentUserId;
   return {
     id: `m-${msg.messageId}`,
+    messageId: msg.messageId,
     kind: mine ? "user" : "support",
     text: msg.content,
     timeLabel: formatTime(msg.createdAt),
     createdAt: msg.createdAt,
+    readByPeer: mine ? !!msg.readByPeer : false,
   };
 }
 

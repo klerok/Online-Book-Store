@@ -26,14 +26,9 @@ export function Navigation() {
 
   function userLinks() {
     return (
-      <>
-        <Link to="/" className={styles.link}>
-          Home
-        </Link>
-        <button type="button" className={styles.link} onClick={handleLogout}>
-          Logout
-        </button>
-      </>
+      <button type="button" className={styles.link} onClick={handleLogout}>
+        Logout
+      </button>
     );
   }
 

@@ -40,22 +40,27 @@
 }
 
 .supportChat {
-  flex: 1 1 0%;
+  flex: 0 1 auto;
   min-height: 0;
+  width: 100%;
   display: grid;
   grid-template-columns: minmax(240px, 300px) 1fr;
+  grid-template-rows: minmax(0, 1fr);
   gap: 0;
   border-radius: var(--radius);
   overflow: hidden;
   border: 1px solid var(--color-border);
   box-shadow: var(--shadow);
   background: var(--color-surface);
+  max-height: 85vh;
+  /* Не даём 1fr растянуть белую карточку выше контента; при переполнении высота = 85vh и скролл внутри колонок */
+  height: min(85vh, max-content);
 }
 
 @media (max-width: 768px) {
   .supportChat {
     grid-template-columns: 1fr;
-    grid-template-rows: auto 1fr;
+    grid-template-rows: auto minmax(0, 1fr);
   }
 }
 
@@ -130,6 +135,7 @@
   list-style: none;
   margin: 0;
   padding: 0;
+  min-height: 0;
   overflow-y: auto;
   flex: 1;
   display: flex;
@@ -191,8 +197,15 @@
   display: flex;
   flex-direction: column;
   min-height: 0;
-  min-height: 360px;
   background: var(--color-surface);
+}
+
+.chatBody {
+  flex: 1 1 0%;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
 .chatToolbar {
@@ -318,6 +331,7 @@
 
 .emptyChat {
   flex: 1;
+  min-height: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -413,11 +427,27 @@
   margin: 0;
 }
 
+.bubbleFooter {
+  display: flex;
+  align-items: baseline;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.35rem;
+}
 .bubbleTime {
-  display: block;
-  margin-top: 0.3rem;
   font-size: 0.6875rem;
   color: var(--color-text-muted);
+}
+.bubbleUnread {
+  font-size: 0.6875rem;
+  font-weight: 500;
+  color: #b91c1c;
+}
+.bubbleRead {
+  font-size: 0.6875rem;
+  font-weight: 500;
+  color: #1d4ed8;
 }
 
 .composer {

@@ -71,10 +71,12 @@ export function useSupportDesk(user) {
         );
         setMessagesLoading(false);
       },
+
       onChatTicket: ({ chatId, ticket }) => {
         if (chatId !== selectedChatIdRef.current) return;
         setActiveTicket(ticket ?? null);
       },
+
       onChatMessage: (payload) => {
         const u = userRef.current;
         if (!u || !payload || payload.chatId !== selectedChatIdRef.current) {
@@ -85,6 +87,7 @@ export function useSupportDesk(user) {
           return [...prev, mapServerMessage(payload, u.userId)];
         });
       },
+
       onTicketCreated: (payload) => {
         if (!isStaffRole(userRef.current?.role) || !payload?.chatId) return;
         setChats((prev) => {
@@ -92,6 +95,24 @@ export function useSupportDesk(user) {
           return [chatRowFromSocketPayload(payload), ...prev];
         });
       },
+      onChatReadReceipt: ({ chatId, readerId, lastReadMessageId }) => {
+        const u = userRef.current;
+        if (!u || Number(chatId) !== Number(selectedChatIdRef.current)) return;
+        if (Number(readerId) === Number(u.userId) || lastReadMessageId == null)
+          return;
+
+        setMessages((prev) =>
+          prev.map((msg) =>
+            msg.messageId != null &&
+            msg.kind === "user" &&
+            msg.messageId <= Number(lastReadMessageId) &&
+            !msg.readByPeer
+              ? { ...msg, readByPeer: true }
+              : msg
+          )
+        );
+      },
+
       onChatClosed: (payload) => {
         const id = payload?.chatId;
         if (id == null) return;
@@ -112,9 +133,32 @@ export function useSupportDesk(user) {
     status: socketStatus,
     joinChat,
     sendMessage: socketSendMessage,
-  } = useSupportChatSocket({ enabled: !!user, handlers: socketHandlers });
-
+    markChatReadUpTo,
+  } = useSupportChatSocket({
+    enabled: !!user,
+    userId: user?.userId,
+    handlers: socketHandlers,
+  });
   const socketConnected = socketStatus === "connected";
+
+  useEffect(() => {
+    if (selectedChatId == null || !socketConnected) return;
+    const flush = () => {
+      if (
+        typeof document !== "undefined" &&
+        document.visibilityState !== "visible"
+      )
+        return;
+      const ids = messages
+        .map((m) => m.messageId)
+        .filter((id) => typeof id === "number" && id > 0);
+      if (!ids.length) return;
+      markChatReadUpTo(selectedChatId, Math.max(...ids));
+    };
+    document.addEventListener("visibilitychange", flush);
+    return () => document.removeEventListener("visibilitychange", flush);
+  }, [selectedChatId, socketConnected, messages, markChatReadUpTo]);
+
   const isAgent = isStaffRole(user?.role);
   const canCreateTicket = !isAgent;
 

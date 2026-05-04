@@ -147,10 +147,7 @@ class ChatRepository {
         options as ListCustomerChatsOptions
       );
     }
-    if (
-      role === UserRole.SUPPORT_AGENT ||
-      role === UserRole.ADMIN
-    ) {
+    if (role === UserRole.SUPPORT_AGENT || role === UserRole.ADMIN) {
       const rows = await ChatRepository.listOpenConversationsForSupportQueue();
       return rows.map((conversation) => ({ conversation }));
     }
@@ -183,6 +180,67 @@ class ChatRepository {
         chatId: true,
       },
     });
+  }
+
+  static async getMaxMessageId(chatId: number) {
+    const aggregate = await prisma.chatMessage.aggregate({
+      where: { chatId },
+      _max: { messageId: true },
+    });
+    return aggregate._max.messageId;
+  }
+
+  static async updateParticipantLastRead(
+    chatId: number,
+    userId: number,
+    lastReadMessageId: number
+  ) {
+    return prisma.chatParticipant.update({
+      where: { chatId_userId: { chatId, userId } },
+      data: { lastReadMessageId },
+    });
+  }
+
+  static async bumpParticipantLastReadIfHigher(
+    chatId: number,
+    userId: number,
+    messageId: number
+  ) {
+    const row = await prisma.chatParticipant.findUnique({
+      where: { chatId_userId: { chatId, userId } },
+      select: { lastReadMessageId: true, leftAt: true },
+    });
+    if (!row || row.leftAt != null) return;
+    const current = row.lastReadMessageId;
+    const next = current == null ? messageId : Math.max(current, messageId);
+    if (current != null && next <= current) return;
+    await prisma.chatParticipant.update({
+      where: { chatId_userId: { chatId, userId } },
+      data: { lastReadMessageId: next },
+    });
+  }
+
+  static async getParticipantLastRead(
+    chatId: number,
+    userId: number
+  ): Promise<number | null> {
+    const row = await prisma.chatParticipant.findUnique({
+      where: { chatId_userId: { chatId, userId } },
+      select: { lastReadMessageId: true },
+    });
+    return row?.lastReadMessageId ?? null;
+  }
+
+  static async getPeerMaxLastReadExcept(chatId: number, exceptUserId: number) {
+    const agg = await prisma.chatParticipant.aggregate({
+      where: {
+        chatId,
+        leftAt: null,
+        userId: { not: exceptUserId },
+      },
+      _max: { lastReadMessageId: true },
+    });
+    return agg._max.lastReadMessageId;
   }
 }
 

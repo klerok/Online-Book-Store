@@ -14,10 +14,18 @@ export type SendPayload = {
   encrypted: ChatEncryptedText;
 };
 
+export type MarkReadPayload = {
+  chatId: number;
+  upToMessageId: number;
+};
+
 export type JoinAck =
   | { ok: true; serverPublicKey: string }
   | { ok: false; error: string };
+
 export type SendAck = { ok: true } | { ok: false; error: string };
+
+export type MarkReadAck = { ok: true } | { ok: false; error: string };
 
 export interface ChatMessage {
   messageId: number;
@@ -34,4 +42,5 @@ export interface ChatEncryptedText {
 
 export type ChatEncryptedMessage = Omit<ChatMessage, "content"> & {
   content: ChatEncryptedText;
+  readByPeer?: boolean;
 };

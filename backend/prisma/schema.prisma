@@ -79,12 +79,13 @@ model ChatConversation {
 }
 
 model ChatParticipant {
-  id         Int             @id @default(autoincrement())
-  chatId     Int
-  userId     Int
-  roleInChat ParticipantRole
-  joinedAt   DateTime        @default(now())
-  leftAt     DateTime?
+  id                Int             @id @default(autoincrement())
+  chatId            Int
+  userId            Int
+  roleInChat        ParticipantRole
+  joinedAt          DateTime        @default(now())
+  leftAt            DateTime?
+  lastReadMessageId Int?
 
   conversation ChatConversation @relation(fields: [chatId], references: [chatId], onDelete: Cascade)
   user         User             @relation(fields: [userId], references: [userId], onDelete: Cascade)

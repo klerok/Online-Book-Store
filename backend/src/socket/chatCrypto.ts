@@ -109,10 +109,12 @@ export function decryptText(
 
 export function encryptMessage(
   message: ChatMessage,
-  sharedKey: Buffer
+  sharedKey: Buffer,
+  meta?: { readByPeer?: boolean }
 ): ChatEncryptedMessage {
   return {
     ...message,
     content: encryptText(message.content, sharedKey),
+    ...(meta && { meta }),
   };
 }

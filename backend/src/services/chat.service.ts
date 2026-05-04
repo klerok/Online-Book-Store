@@ -43,8 +43,7 @@ class ChatService {
       chat.chatId,
       params.userId
     );
-    if (!participant)
-      throw new Error("User is not a participant of this chat");
+    if (!participant) throw new Error("User is not a participant of this chat");
 
     const message = await ChatRepository.createMessage(
       chat.chatId,
@@ -209,6 +208,54 @@ class ChatService {
 
   static async getTicketByChatId(chatId: number) {
     return ChatRepository.findTicketByChatId(chatId);
+  }
+
+  static async markChatFullyReadForUser(chatId: number, userId: number) {
+    const maxMessageId = await ChatRepository.getMaxMessageId(chatId);
+    if (!maxMessageId) return;
+    await ChatRepository.updateParticipantLastRead(
+      chatId,
+      userId,
+      maxMessageId
+    );
+    return { lastReadMessageId: maxMessageId };
+  }
+
+  static async getPeerMaxLastRead(chatId: number, viewerId: number) {
+    return ChatRepository.getPeerMaxLastReadExcept(chatId, viewerId);
+  }
+
+  static async bumpLastReadOnMessageDelivered(
+    chatId: number,
+    recipientUserId: number,
+    messageId: number
+  ) {
+    await ChatRepository.bumpParticipantLastReadIfHigher(
+      chatId,
+      recipientUserId,
+      messageId
+    );
+  }
+
+  static async markReadUpTo(
+    chatId: number,
+    userId: number,
+    upToMessageId: number
+  ): Promise<number | null> {
+    const participant = await ChatRepository.findParticipant(chatId, userId);
+    if (!participant)
+      throw new Error("User is not a participant of this chat");
+
+    const maxInChat = await ChatRepository.getMaxMessageId(chatId);
+    const safeUpTo =
+      maxInChat != null ? Math.min(upToMessageId, maxInChat) : upToMessageId;
+
+    await ChatRepository.bumpParticipantLastReadIfHigher(
+      chatId,
+      userId,
+      safeUpTo
+    );
+    return ChatRepository.getParticipantLastRead(chatId, userId);
   }
 }
 

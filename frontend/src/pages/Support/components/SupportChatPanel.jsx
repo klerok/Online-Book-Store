@@ -63,9 +63,7 @@ export function SupportChatPanel({ desk }) {
             </button>
           )}
           <span
-            className={
-              socketConnected ? styles.badgeLive : styles.badgeOffline
-            }
+            className={socketConnected ? styles.badgeLive : styles.badgeOffline}
           >
             {socketConnected ? "Связь есть" : "Нет связи"}
           </span>
@@ -82,7 +80,7 @@ export function SupportChatPanel({ desk }) {
           </p>
         </div>
       ) : (
-        <>
+        <div className={styles.chatBody}>
           {isAgent && ticketDescriptionText ? (
             <div
               className={styles.ticketDescriptionPanel}
@@ -111,17 +109,27 @@ export function SupportChatPanel({ desk }) {
                 <div key={msg.id} className={messageRowClass(msg, styles)}>
                   <div className={bubbleClass(msg, styles)}>
                     <p className={styles.bubbleText}>{msg.text}</p>
-                    <span className={styles.bubbleTime}>{msg.timeLabel}</span>
+                    <div className={styles.bubbleFooter}>
+                      <span className={styles.bubbleTime}>{msg.timeLabel}</span>
+                      {msg.kind === "user" ? (
+                        <span
+                          className={
+                            msg.readByPeer
+                              ? styles.bubbleRead
+                              : styles.bubbleUnread
+                          }
+                        >
+                          {msg.readByPeer ? "Прочитано" : "Не прочитано"}
+                        </span>
+                      ) : null}
+                    </div>
                   </div>
                 </div>
               ))}
           </div>
 
           <form className={styles.composer} onSubmit={handleSend}>
-            <label
-              htmlFor="support-message"
-              className={styles.visuallyHidden}
-            >
+            <label htmlFor="support-message" className={styles.visuallyHidden}>
               Сообщение
             </label>
             <textarea
@@ -147,7 +155,7 @@ export function SupportChatPanel({ desk }) {
               Отправить
             </button>
           </form>
-        </>
+        </div>
       )}
     </div>
   );

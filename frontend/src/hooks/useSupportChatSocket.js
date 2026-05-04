@@ -14,7 +14,9 @@ const CHAT_EVENTS = [
   ["chat:closed", "onChatClosed"],
 ];
 
-export function useSupportChatSocket({ enabled, handlers = {} }) {
+export function useSupportChatSocket({ enabled, userId, handlers = {} }) {
+  const userIdRef = useRef(userId);
+  userIdRef.current = userId;
   const socketRef = useRef(null);
   const sharedKeyRef = useRef(null);
   const activeChatIdRef = useRef(null);
@@ -39,6 +41,25 @@ export function useSupportChatSocket({ enabled, handlers = {} }) {
       chatId: payload.chatId,
       messages: decryptedMessages,
     });
+    function isChatTabVisible() {
+      if (typeof document === "undefined") return false;
+      return document.visibilityState === "visible";
+    }
+    const socket = socketRef.current;
+    const uid = userIdRef.current;
+    if (socket?.connected && uid && payload?.chatId && isChatTabVisible()) {
+      const numericIds = decryptedMessages
+        .map((m) => m.messageId)
+        .filter((id) => typeof id === "number" && id > 0);
+      if (numericIds.length > 0) {
+        const maxId = Math.max(...numericIds);
+
+        socket.emit("chat:mark-read", {
+          chatId: Number(payload.chatId),
+          upToMessageId: maxId,
+        });
+      }
+    }
   }, []);
 
   const decryptMessagePayload = useCallback(async (payload, sharedKey) => {
@@ -47,6 +68,21 @@ export function useSupportChatSocket({ enabled, handlers = {} }) {
       content: await decryptText(payload.content, sharedKey),
     };
     handlersRef.current.onChatMessage?.(decrypted);
+    const socket = socketRef.current;
+    const uid = userIdRef.current;
+    if (
+      socket?.connected &&
+      uid &&
+      decrypted.senderId != null &&
+      decrypted.senderId !== uid &&
+      typeof decrypted.messageId === "number" &&
+      isChatTabVisible()
+    ) {
+      socket.emit("chat:mark-read", {
+        chatId: Number(decrypted.chatId),
+        upToMessageId: decrypted.messageId,
+      });
+    }
   }, []);
 
   const flushPendingEncryptedEvents = useCallback(async () => {
@@ -129,6 +165,10 @@ export function useSupportChatSocket({ enabled, handlers = {} }) {
       }
     });
 
+    socket.on("chat:read-receipt", (payload) => {
+      handlersRef.current.onChatReadReceipt?.(payload);
+    });
+
     for (const [event, key] of CHAT_EVENTS) {
       socket.on(event, (payload) => handlersRef.current[key]?.(payload));
     }
@@ -189,5 +229,17 @@ export function useSupportChatSocket({ enabled, handlers = {} }) {
     });
   }, []);
 
-  return { status, joinChat, sendMessage };
+  const markChatReadUpTo = useCallback((chatId, upToMessageId) => {
+    const socket = socketRef.current;
+    if (!socket?.connected || !chatId || !upToMessageId) return;
+    socket.emit(
+      "chat:mark-read",
+      { chatId: Number(chatId), upToMessageId: Number(upToMessageId) },
+      (ack) => {
+        if (ack && !ack.ok) console.error("chat:mark-read", ack.error);
+      }
+    );
+  }, []);
+
+  return { status, joinChat, sendMessage, markChatReadUpTo };
 }
